@@ -4,16 +4,10 @@
   "version": "1.0",
   "description": "A beautiful new tab page with clock, search bar, and rotating backgrounds",
   "chrome_url_overrides": {
-    "newtab": "newtab.html"
+    "newtab": "index.html"
   },
   "permissions": [
-    "storage",
-    "fileSystem",
-    "fileSystem.directory",
-    "fileSystem.write"
-  ],
-  "host_permissions": [
-    "file:///*"
+    "storage"
   ],
   "background": {
     "service_worker": "background.js",
@@ -23,4 +17,4 @@
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   }
-} 
+}
