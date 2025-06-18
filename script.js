@@ -33,32 +33,85 @@ function updateClock() {
 // Background handling
 let backgroundImages = [];
 
+// Import backgrounds list directly for local development
+const localBackgrounds = [
+    "24wmag-ps_001.jpg",
+    "variety-ps-aug24_003.jpg",
+    "sabrina-carpenter-versace-4k-db-3840x2160.jpg",
+    "sabrina-carpenter-versace-2025-br-3840x2160.jpg",
+    "sabrina-carpenter-2025-dz-3840x2160.jpg",
+    "sabrina-carpenter-alex-harper-met-gala-2024-ye-3840x2160.jpg",
+    "sabrina-carpenter-for-rolling-stone-wf-3840x2160.jpg",
+    "sabrina-carpenter-snl-2024-ka-3840x2160.jpg",
+    "sabrina-carpenter-id-magazine-kq-3840x2160.jpg",
+    "sabrina-carpenter-2024-ih-3840x2160.jpg",
+    "sabrina-carpenter-for-dunkin-cg-3840x2160.jpg",
+    "sabrina-carpenter-photo-4k-wallpaper-uhdpaper.com-786@2@b.jpg",
+    "sabrina-carpenter-photoshoot-4k-wallpaper-uhdpaper.com-774@2@b.jpg",
+    "sabrina-carpenter-blonde-4k-wallpaper-uhdpaper.com-602@2@a.jpg",
+    "sabrina-carpenter-for-paper-magazine-2024-fb-1920x1080.jpg",
+    "sns-ps_009.jpg",
+    "sns-ps_016.jpg",
+    "sns-ps_015.jpg",
+    "sns-ps_008.jpg",
+    "sabrina-carpenter-for-redken-campaign-2025-b0-2880x1800.jpg",
+    "sabrina-carpenter-2020-actress-zs-2880x1800.jpg",
+    "Eics_fwd_Photoshoot_2.png",
+    "sabrina-for-short-n-sweet-deluxe-v0-01zap298yxie1.png"
+];
+
 async function loadBackgrounds() {
     try {
-        // Always fetch from backgrounds.json as a regular web asset
-        const response = await fetch('backgrounds.json');
-        const data = await response.json();
-        backgroundImages = data.backgrounds || [];
+        // Check if we're running as a Chrome extension
+        if (typeof chrome !== 'undefined' && chrome.storage) {
+            console.log('Running as Chrome extension');
+            return new Promise((resolve) => {
+                chrome.storage.local.get(['backgrounds'], (result) => {
+                    backgroundImages = result.backgrounds || [];
+                    console.log('Loaded backgrounds from chrome.storage:', backgroundImages);
+                    resolve();
+                });
+            });
+        } else {
+            // Running locally - use the imported list
+            console.log('Running locally, using local backgrounds list');
+            backgroundImages = localBackgrounds;
+            console.log('Loaded local backgrounds:', backgroundImages);
+        }
     } catch (error) {
-        console.error('Error loading backgrounds:', error);
+        console.error('Error in loadBackgrounds:', error);
         backgroundImages = [];
     }
 }
 
 function setRandomBackground() {
-    if (backgroundImages.length === 0) return;
+    if (backgroundImages.length === 0) {
+        console.error('No background images available');
+        return;
+    }
     
     const randomIndex = Math.floor(Math.random() * backgroundImages.length);
     const img = new Image();
-    // Path is relative to the web server's root (Live Server)
-    const imagePath = `backgrounds/${backgroundImages[randomIndex]}`;
+    
+    // Handle paths differently based on context
+    let imagePath;
+    if (typeof chrome !== 'undefined' && chrome.runtime) {
+        // Running as extension
+        imagePath = chrome.runtime.getURL(`backgrounds/${backgroundImages[randomIndex]}`);
+    } else {
+        // Running locally
+        imagePath = `backgrounds/${backgroundImages[randomIndex]}`;
+    }
+    
+    console.log('Attempting to load image:', imagePath);
     
     img.src = imagePath;
     img.onload = () => {
+        console.log('Image loaded successfully:', imagePath);
         document.body.style.backgroundImage = `url('${imagePath}')`;
     };
-    img.onerror = () => {
-        console.error('Error loading image:', imagePath);
+    img.onerror = (error) => {
+        console.error('Failed to load image:', imagePath, error);
         // Try another image if this one fails
         setRandomBackground();
     };

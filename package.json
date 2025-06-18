@@ -1,0 +1,6 @@
+{
+  "name": "new-tab-page",
+  "version": "1.0.0",
+  "description": "Custom new tab page Chrome extension",
+  "dependencies": {}
+} 

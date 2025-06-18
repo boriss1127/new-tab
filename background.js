@@ -1,14 +1,30 @@
-// Background script to handle file system operations
+// Initialize storage when the extension loads
+chrome.runtime.onInstalled.addListener(() => {
+    console.log('Extension installed/updated, initializing storage...');
+    // Load backgrounds from backgrounds.json
+    fetch(chrome.runtime.getURL('backgrounds.json'))
+        .then(response => response.json())
+        .then(data => {
+            const imageFiles = data.backgrounds || [];
+            console.log('Loaded backgrounds from backgrounds.json:', imageFiles);
+            chrome.storage.local.set({ backgrounds: imageFiles }, () => {
+                console.log('Backgrounds saved to storage');
+            });
+        })
+        .catch(error => {
+            console.error('Error loading backgrounds.json:', error);
+        });
+});
+
+// Handle messages from content script
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === 'updateBackgrounds') {
-        // In Manifest V3, we cannot dynamically scan or write to the extension's own package folder at runtime.
-        // We will read the list of backgrounds directly from backgrounds.json.
-        // The backgrounds.json file must be manually kept up-to-date by the user,
-        // and the extension must be reloaded for changes to take effect.
+        console.log('Received updateBackgrounds request');
         fetch(chrome.runtime.getURL('backgrounds.json'))
             .then(response => response.json())
             .then(data => {
                 const imageFiles = data.backgrounds || [];
+                console.log('Updating backgrounds in storage:', imageFiles);
                 chrome.storage.local.set({ backgrounds: imageFiles }, () => {
                     sendResponse({ success: true, backgrounds: imageFiles });
                 });
